@@ -7,7 +7,7 @@ import XCTest
 import CodableOptionSetMacros
 
 let testMacros: [String: Macro.Type] = [
-    "stringify": StringifyMacro.self,
+    "CodableOptionSet": CodableOptionSetMacro.self,
 ]
 #endif
 
@@ -16,11 +16,65 @@ final class CodableOptionSetTests: XCTestCase {
         #if canImport(CodableOptionSetMacros)
         assertMacroExpansion(
             """
-            #stringify(a + b)
+            @CodableOptionSet struct MyOptionSet: OptionSet {
+                var rawValue: Int
+                static let optionOne = MyOptionSet(rawValue: 1 << 0)
+                static let optionTwo: MyOptionSet = .init(rawValue: 1 << 1)
+                static let optionThree: MyOptionSet = MyOptionSet(rawValue: 1 << 2)
+            
+                init(rawValue: Int) {
+                    self.rawValue = rawValue
+                }
+            }
             """,
-            expandedSource: """
-            (a + b, "a + b")
-            """,
+            expandedSource: #"""
+            struct MyOptionSet: OptionSet {
+                var rawValue: Int
+                static let optionOne = MyOptionSet(rawValue: 1 << 0)
+                static let optionTwo: MyOptionSet = .init(rawValue: 1 << 1)
+                static let optionThree: MyOptionSet = MyOptionSet(rawValue: 1 << 2)
+            
+                init(rawValue: Int) {
+                    self.rawValue = rawValue
+                }
+            }
+            
+            extension MyOptionSet: Codable {
+                private static let mapping: [String: MyOptionSet] = [
+                    "optionOne": .optionOne,
+                    "optionTwo": .optionTwo,
+                    "optionThree": .optionThree
+                ]
+
+                init(from decoder: Decoder) throws {
+                    var container = try decoder.unkeyedContainer()
+                    var result: MyOptionSet = []
+                    while !container.isAtEnd {
+                        let optionName = try container.decode(String.self)
+                        guard let opt = Self.mapping[optionName] else {
+                            let context = DecodingError.Context(
+                                codingPath: decoder.codingPath,
+                                debugDescription: "Option not recognised: \(optionName)"
+                            )
+                            throw DecodingError.typeMismatch(String.self, context)
+                        }
+                        result.insert(opt)
+                    }
+                    self = result
+                }
+
+                func encode(to encoder: Encoder) throws {
+                    var container = encoder.unkeyedContainer()
+
+                    let optionsRaw: [String]
+                    optionsRaw = Self.mapping
+                    .compactMap {
+                        self.contains($0.value) ? $0.key : nil
+                    }
+                    try container.encode(contentsOf: optionsRaw)
+                }
+            }
+            """#,
             macros: testMacros
         )
         #else
@@ -28,14 +82,78 @@ final class CodableOptionSetTests: XCTestCase {
         #endif
     }
 
-    func testMacroWithStringLiteral() throws {
+    func testMacroAlt() throws {
         #if canImport(CodableOptionSetMacros)
         assertMacroExpansion(
-            #"""
-            #stringify("Hello, \(name)")
-            """#,
+            """
+            @CodableOptionSet struct MyOptionSet: OptionSet {
+                var rawValue: Int
+                static let optionOne = MyOptionSet(rawValue: 1 << 0)
+                static let optionTwo: MyOptionSet = .init(rawValue: 1 << 1)
+                static let optionThree: MyOptionSet = MyOptionSet(rawValue: 1 << 2)
+                static let all: MyOptionSet = [.optionOne, .optionTwo, .optionThree]
+                        
+                init(rawValue: Int) {
+                    self.rawValue = rawValue
+                }
+            }
+            """,
             expandedSource: #"""
-            ("Hello, \(name)", #""Hello, \(name)""#)
+            struct MyOptionSet: OptionSet {
+                var rawValue: Int
+                static let optionOne = MyOptionSet(rawValue: 1 << 0)
+                static let optionTwo: MyOptionSet = .init(rawValue: 1 << 1)
+                static let optionThree: MyOptionSet = MyOptionSet(rawValue: 1 << 2)
+                static let all: MyOptionSet = [.optionOne, .optionTwo, .optionThree]
+                        
+                init(rawValue: Int) {
+                    self.rawValue = rawValue
+                }
+            }
+            
+            extension MyOptionSet: Codable {
+                private static let mapping: [String: MyOptionSet] = [
+                    "optionOne": .optionOne,
+                    "optionTwo": .optionTwo,
+                    "optionThree": .optionThree,
+                    "all": .all
+                ]
+
+                init(from decoder: Decoder) throws {
+                    var container = try decoder.unkeyedContainer()
+                    var result: MyOptionSet = []
+                    while !container.isAtEnd {
+                        let optionName = try container.decode(String.self)
+                        guard let opt = Self.mapping[optionName] else {
+                            let context = DecodingError.Context(
+                                codingPath: decoder.codingPath,
+                                debugDescription: "Option not recognised: \(optionName)"
+                            )
+                            throw DecodingError.typeMismatch(String.self, context)
+                        }
+                        result.insert(opt)
+                    }
+                    self = result
+                }
+
+                func encode(to encoder: Encoder) throws {
+                    var container = encoder.unkeyedContainer()
+
+                    let optionsRaw: [String]
+                    if self == .all {
+                        optionsRaw = ["all"]
+                    } else {
+                        optionsRaw = Self.mapping
+                    .filter {
+                            $0.key != "all"
+                        }
+                        .compactMap {
+                            self.contains($0.value) ? $0.key : nil
+                        }
+                    }
+                    try container.encode(contentsOf: optionsRaw)
+                }
+            }
             """#,
             macros: testMacros
         )

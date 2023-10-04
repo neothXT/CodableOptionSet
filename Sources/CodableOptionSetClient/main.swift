@@ -1,8 +1,13 @@
 import CodableOptionSet
 
-let a = 17
-let b = 25
+@CodableOptionSet struct MyOptionSet: OptionSet {
+    var rawValue: Int
+    static let optionOne = MyOptionSet(rawValue: 1 << 0)
+    static let optionTwo: MyOptionSet = .init(rawValue: 1 << 1)
+    static let optionThree: MyOptionSet = MyOptionSet(rawValue: 1 << 2)
+    static let all: MyOptionSet = [.optionOne, .optionTwo, .optionThree]
 
-let (result, code) = #stringify(a + b)
-
-print("The value \(result) was produced by the code \"\(code)\"")
+    init(rawValue: Int) {
+        self.rawValue = rawValue
+    }
+}

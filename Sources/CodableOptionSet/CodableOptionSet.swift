@@ -1,11 +1,6 @@
 // The Swift Programming Language
 // https://docs.swift.org/swift-book
 
-/// A macro that produces both a value and a string containing the
-/// source code that generated the value. For example,
-///
-///     #stringify(x + y)
-///
-/// produces a tuple `(x + y, "x + y")`.
-@freestanding(expression)
-public macro stringify<T>(_ value: T) -> (T, String) = #externalMacro(module: "CodableOptionSetMacros", type: "StringifyMacro")
+/// A macro that produces extends OptionSet to conform to Codable (Encodable & Decodable) protocol
+@attached(extension, conformances: Codable, names: named(init), named(encode), named(mapping))
+public macro CodableOptionSet() = #externalMacro(module: "CodableOptionSetMacros", type: "CodableOptionSetMacro")
