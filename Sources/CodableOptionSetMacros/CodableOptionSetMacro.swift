@@ -6,7 +6,12 @@ import SwiftSyntaxMacros
 /// A macro that produces extends OptionSet to conform to Codable (Encodable & Decodable) protocol
 public struct CodableOptionSetMacro: ExtensionMacro {
     public static func expansion(of node: AttributeSyntax, attachedTo declaration: some DeclGroupSyntax, providingExtensionsOf type: some TypeSyntaxProtocol, conformingTo protocols: [TypeSyntax], in context: some MacroExpansionContext) throws -> [ExtensionDeclSyntax] {
-        guard let type = declaration.as(StructDeclSyntax.self)?.name.text else { return [] }
+        let inheritedType = declaration.as(StructDeclSyntax.self)?.inheritanceClause?.inheritedTypes.trimmedDescription
+        
+        guard inheritedType == "OptionSet" else {
+            context.diagnose(CodableOptionSetError.badInheritance.diagnostic(for: declaration))
+            return []
+        }
         
         let staticMembers = declaration.memberBlock.members
             .compactMap { $0.decl.as(VariableDeclSyntax.self) }
@@ -15,19 +20,19 @@ public struct CodableOptionSetMacro: ExtensionMacro {
         let optionNames = staticMembers
             .compactMap { $0.bindings.first }
             .filter {
-                if $0.typeAnnotation?.type.as(IdentifierTypeSyntax.self)?.name.text == type {
+                if $0.typeAnnotation?.type.as(IdentifierTypeSyntax.self)?.name.text == type.description {
                     return true
                 }
                 
                 let initializer = $0.initializer?.value.as(FunctionCallExprSyntax.self)
                 
-                return initializer?.calledExpression.as(DeclReferenceExprSyntax.self)?.baseName.text == type
+                return initializer?.calledExpression.as(DeclReferenceExprSyntax.self)?.baseName.text == type.description
             }
             .compactMap { $0.pattern.as(IdentifierPatternSyntax.self)?.identifier.text }
         
-        let mappingExpression = prepareMappingExpression(for: optionNames, type: type)
-        let initExpression = prepareInitExpression(type: type)
-        let encodingExpression = prepareEncodingExpression(withAllOption: optionNames.contains("all"), type: type)
+        let mappingExpression = prepareMappingExpression(for: optionNames, type: type.description)
+        let initExpression = prepareInitExpression(type: type.description)
+        let encodingExpression = prepareEncodingExpression(withAllOption: optionNames.contains("all"), type: type.description)
         
         let syntax = try ExtensionDeclSyntax("""
         extension \(raw: type): Codable {
