@@ -1,6 +1,6 @@
-import CodableOptionSet
+import EasilyCodableOptionSet
 
-@CodableOptionSet struct MyOptionSet: OptionSet {
+@EasilyCodableOptionSet struct MyOptionSet: OptionSet {
     var rawValue: Int
     static let optionOne = MyOptionSet(rawValue: 1 << 0)
     static let optionTwo: MyOptionSet = .init(rawValue: 1 << 1)

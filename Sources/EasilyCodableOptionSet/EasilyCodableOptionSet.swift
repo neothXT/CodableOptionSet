@@ -3,4 +3,4 @@
 
 /// A macro that produces extends OptionSet to conform to Codable (Encodable & Decodable) protocol
 @attached(extension, conformances: Codable, names: named(init), named(encode), named(mapping))
-public macro CodableOptionSet() = #externalMacro(module: "CodableOptionSetMacros", type: "CodableOptionSetMacro")
+public macro EasilyCodableOptionSet() = #externalMacro(module: "EasilyCodableOptionSetMacros", type: "EasilyCodableOptionSetMacro")

@@ -1,6 +1,6 @@
 # CodableOptionSet
-CodableOptionSet allows you to easily make your OptionSets conform to Codable.
-All you need to do is to add `@CodableOptionSet` to your OptionSet.
+CodableOptionSet allows you to easily make your OptionSets conform to Codable and automatically cover `init(from decoder: Decoder)` and `encode(to encoder: Encoder)` for you.
+All you need to do is to add `@EasilyCodableOptionSet` to your OptionSet.
 
 ## Installation
 
@@ -9,7 +9,7 @@ CodableOptionSet is currently available only via SPM (Swift Package Manager)
 ## Basic Usage
 
 ```Swift
-@CodableOptionSet struct MyOptionSet: OptionSet {
+@EasilyCodableOptionSet struct MyOptionSet: OptionSet {
     var rawValue: Int
     static let optionOne = MyOptionSet(rawValue: 1 << 0)
     static let optionTwo: MyOptionSet = .init(rawValue: 1 << 1)

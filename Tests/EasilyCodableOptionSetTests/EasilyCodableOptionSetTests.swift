@@ -3,20 +3,20 @@ import SwiftSyntaxMacrosTestSupport
 import XCTest
 
 // Macro implementations build for the host, so the corresponding module is not available when cross-compiling. Cross-compiled tests may still make use of the macro itself in end-to-end tests.
-#if canImport(CodableOptionSetMacros)
-import CodableOptionSetMacros
+#if canImport(EasilyCodableOptionSetMacros)
+import EasilyCodableOptionSetMacros
 
 let testMacros: [String: Macro.Type] = [
-    "CodableOptionSet": CodableOptionSetMacro.self,
+    "EasilyCodableOptionSet": EasilyCodableOptionSetMacro.self,
 ]
 #endif
 
 final class CodableOptionSetTests: XCTestCase {
     func testMacro() throws {
-        #if canImport(CodableOptionSetMacros)
+        #if canImport(EasilyCodableOptionSetMacros)
         assertMacroExpansion(
             """
-            @CodableOptionSet struct MyOptionSet: OptionSet {
+            @EasilyCodableOptionSet struct MyOptionSet: OptionSet {
                 var rawValue: Int
                 static let optionOne = MyOptionSet(rawValue: 1 << 0)
                 static let optionTwo: MyOptionSet = .init(rawValue: 1 << 1)
@@ -83,10 +83,10 @@ final class CodableOptionSetTests: XCTestCase {
     }
 
     func testMacroAlt() throws {
-        #if canImport(CodableOptionSetMacros)
+        #if canImport(EasilyCodableOptionSetMacros)
         assertMacroExpansion(
             """
-            @CodableOptionSet struct MyOptionSet: OptionSet {
+            @EasilyCodableOptionSet struct MyOptionSet: OptionSet {
                 var rawValue: Int
                 static let optionOne = MyOptionSet(rawValue: 1 << 0)
                 static let optionTwo: MyOptionSet = .init(rawValue: 1 << 1)

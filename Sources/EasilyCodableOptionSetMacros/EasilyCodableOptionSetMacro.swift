@@ -4,12 +4,12 @@ import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
 /// A macro that produces extends OptionSet to conform to Codable (Encodable & Decodable) protocol
-public struct CodableOptionSetMacro: ExtensionMacro {
+public struct EasilyCodableOptionSetMacro: ExtensionMacro {
     public static func expansion(of node: AttributeSyntax, attachedTo declaration: some DeclGroupSyntax, providingExtensionsOf type: some TypeSyntaxProtocol, conformingTo protocols: [TypeSyntax], in context: some MacroExpansionContext) throws -> [ExtensionDeclSyntax] {
         let inheritedType = declaration.as(StructDeclSyntax.self)?.inheritanceClause?.inheritedTypes.trimmedDescription
         
         guard inheritedType == "OptionSet" else {
-            context.diagnose(CodableOptionSetError.badInheritance.diagnostic(for: declaration))
+            context.diagnose(EasilyCodableOptionSetError.badInheritance.diagnostic(for: declaration))
             return []
         }
         
@@ -114,6 +114,6 @@ public struct CodableOptionSetMacro: ExtensionMacro {
 @main
 struct CodableOptionSetPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
-        CodableOptionSetMacro.self,
+        EasilyCodableOptionSetMacro.self,
     ]
 }
